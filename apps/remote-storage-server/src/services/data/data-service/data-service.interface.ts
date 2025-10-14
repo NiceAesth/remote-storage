@@ -1,6 +1,8 @@
 /**
  * Common interface used for all data stores.
  */
+import { Actor } from '../../../entities/entities.interface';
+
 export interface DataService {
   /**
    * Get a value
@@ -20,4 +22,9 @@ export interface DataService {
    * @param key
    */
   delete(key: string): Promise<void>
+
+  /**
+   * List all keys for a given actor (instanceId + userId)
+   */
+  listKeysForActor(actor: Actor): Promise<string[]>;
 }

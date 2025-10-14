@@ -3,7 +3,7 @@ import { Actor, Entity } from './entities.interface'
 
 import { DataServiceFactory } from '../services/data/data-service/data-service.factory'
 
-const MAX_ENTITY_SIZE_BYTES = 1000000
+const MAX_ENTITY_SIZE_BYTES = 50 * 1024 * 1024
 
 @Injectable()
 export class EntitiesService {
@@ -19,6 +19,20 @@ export class EntitiesService {
 
     return value
   }
+
+  async getAll(actor: Actor): Promise<Record<string, any>> {
+    const keys = await this.dataServiceFactory.getService().listKeysForActor(actor)
+    const result: Record<string, any> = {}
+    for (const key of keys) {
+      const value = await this.dataServiceFactory.getService().get(key)
+      if (!value) {
+        throw new NotFoundException('A key went missing');
+      }
+      result[key] = value
+    }
+    return result
+  }
+
 
   async set(actor: Actor, key: string, value: any): Promise<void> {
     if (!key || !value) {

@@ -1,5 +1,6 @@
 import { Injectable, OnModuleInit } from '@nestjs/common'
 import { DataService } from '../data-service/data-service.interface'
+import { Actor } from '../../../entities/entities.interface';
 
 @Injectable()
 export class SqliteService implements OnModuleInit, DataService {
@@ -54,6 +55,16 @@ export class SqliteService implements OnModuleInit, DataService {
         } else {
           resolve()
         }
+      })
+    })
+  }
+
+  async listKeysForActor(actor: Actor): Promise<string[]> {
+    const pattern = `${actor.instanceId}:${actor.userId}:%`  // keys are stored as "instanceId:userId:key"
+    return new Promise((resolve, reject) => {
+      this.db.all('SELECT key FROM kv WHERE key LIKE ?', [pattern], (err, rows) => {
+        if (err) return reject(err)
+        resolve(rows.map(r => r.key))
       })
     })
   }

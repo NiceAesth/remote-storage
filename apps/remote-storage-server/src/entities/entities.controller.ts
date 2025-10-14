@@ -34,6 +34,12 @@ export class EntitiesController {
     return entity
   }
 
+  @Get(publicApiPrefix)
+  async getAll(@Request() request: Request): Promise<Record<string, any>> {
+    const actor = this.validateRequest(request)
+    return this.entitiesService.getAll(actor)
+  }
+
   @ApiOperation({ summary: 'Set a entity by key' })
   @ApiResponse({
     status: 201,
