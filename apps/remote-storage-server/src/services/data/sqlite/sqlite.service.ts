@@ -47,6 +47,56 @@ export class SqliteService implements OnModuleInit, DataService {
     })
   }
 
+  async compareAndSet(key: string, expectedValue: any | null, value: any): Promise<boolean> {
+    const serializedValue = JSON.stringify(value)
+
+    if (expectedValue === null) {
+      return new Promise((resolve, reject) => {
+        this.db.run(
+          'INSERT OR IGNORE INTO kv (key, value) VALUES (?, ?)',
+          [key, serializedValue],
+          function (err) {
+            if (err) {
+              reject(err)
+            } else {
+              resolve(this.changes === 1)
+            }
+          }
+        )
+      })
+    }
+
+    const serializedExpected = JSON.stringify(expectedValue)
+    return new Promise((resolve, reject) => {
+      this.db.run(
+        'UPDATE kv SET value = ? WHERE key = ? AND value = ?',
+        [serializedValue, key, serializedExpected],
+        function (err) {
+          if (err) {
+            reject(err)
+          } else {
+            resolve(this.changes === 1)
+          }
+        }
+      )
+    })
+  }
+  async compareAndDelete(key: string, expectedValue: any): Promise<boolean> {
+    const serializedExpected = JSON.stringify(expectedValue)
+    return new Promise((resolve, reject) => {
+      this.db.run(
+        'DELETE FROM kv WHERE key = ? AND value = ?',
+        [key, serializedExpected],
+        function (err) {
+          if (err) {
+            reject(err)
+          } else {
+            resolve(this.changes === 1)
+          }
+        }
+      )
+    })
+  }
   async delete(key: string): Promise<void> {
     return new Promise((resolve, reject) => {
       this.db.run('DELETE FROM kv WHERE key = ?', [key], (err) => {

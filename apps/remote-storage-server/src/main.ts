@@ -46,7 +46,7 @@ async function bootstrap() {
     }
   }
 
-  const fastifyAdapter = new FastifyAdapter({ https: httpsOptions, bodyLimit: 10 * 1024 * 1024 })
+  const fastifyAdapter = new FastifyAdapter({ https: httpsOptions, bodyLimit: 64 * 1024 * 1024 })
   fastifyAdapter.enableCors(CORS_OPTIONS)
   const app = await NestFactory.create<NestFastifyApplication>(AppModule, fastifyAdapter)
 

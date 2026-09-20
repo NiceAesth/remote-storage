@@ -32,6 +32,44 @@ export class RedisService implements OnModuleInit, DataService {
     return this.client.set(key, JSON.stringify(value))
   }
 
+  async compareAndSet(key: string, expectedValue: any | null, value: any): Promise<boolean> {
+    const script = [
+      "local current = redis.call('GET', KEYS[1])",
+      "if ARGV[1] == '0' then",
+      "  if current then return 0 end",
+      "else",
+      "  if current ~= ARGV[2] then return 0 end",
+      "end",
+      "redis.call('SET', KEYS[1], ARGV[3])",
+      "return 1",
+    ].join('\n')
+
+    const result = await this.client.eval(script, {
+      keys: [key],
+      arguments: [
+        expectedValue === null ? '0' : '1',
+        expectedValue === null ? '' : JSON.stringify(expectedValue),
+        JSON.stringify(value),
+      ],
+    })
+
+    return Number(result) === 1
+  }
+  async compareAndDelete(key: string, expectedValue: any): Promise<boolean> {
+    const script = [
+      "local current = redis.call('GET', KEYS[1])",
+      "if current ~= ARGV[1] then return 0 end",
+      "redis.call('DEL', KEYS[1])",
+      "return 1",
+    ].join('\n')
+
+    const result = await this.client.eval(script, {
+      keys: [key],
+      arguments: [JSON.stringify(expectedValue)],
+    })
+
+    return Number(result) === 1
+  }
   async delete(key: string) {
     return this.client.del(key)
   }
